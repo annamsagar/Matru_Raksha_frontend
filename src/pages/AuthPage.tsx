@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Shield, Eye, EyeOff, Heart, Stethoscope, Droplets, UserCog } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useRole, UserRole } from "@/contexts/RoleContext";
 
 type AuthMode = "login" | "register";
 
@@ -36,16 +37,20 @@ export default function AuthPage() {
   const [selectedRole, setSelectedRole] = useState("doctor");
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { setRole, setUserName } = useRole();
 
   const loginForm = useForm<LoginForm>();
   const registerForm = useForm<RegisterForm>();
 
   const handleLogin = (data: LoginForm) => {
-    toast({ title: "Welcome back!", description: "Redirecting to dashboard..." });
+    setRole(selectedRole as UserRole);
+    toast({ title: "Welcome back!", description: `Signed in as ${selectedRole}` });
     setTimeout(() => navigate("/dashboard"), 500);
   };
 
   const handleRegister = (data: RegisterForm) => {
+    setRole(selectedRole as UserRole);
+    if (data.name) setUserName(data.name);
     toast({ title: "Account created!", description: "Welcome to Maternal-Guard" });
     setTimeout(() => navigate("/dashboard"), 500);
   };

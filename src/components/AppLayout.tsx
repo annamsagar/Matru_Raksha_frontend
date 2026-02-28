@@ -11,20 +11,53 @@ import {
   X,
   Shield,
   LogOut,
+  Users,
+  BarChart3,
+  ClipboardList,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useRole } from "@/contexts/RoleContext";
 
-const navItems = [
-  { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { path: "/risk-predictor", label: "Risk Predictor", icon: Activity },
-  { path: "/donors", label: "Donor Network", icon: Droplets },
-  { path: "/emergency", label: "SOS Emergency", icon: AlertTriangle },
-  { path: "/profile", label: "Profile", icon: User },
-];
+const navByRole = {
+  doctor: [
+    { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { path: "/risk-predictor", label: "Risk Predictor", icon: Activity },
+    { path: "/emergency", label: "SOS Emergency", icon: AlertTriangle },
+    { path: "/profile", label: "Profile", icon: User },
+  ],
+  donor: [
+    { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { path: "/donors", label: "Donor Network", icon: Droplets },
+    { path: "/profile", label: "Profile", icon: User },
+  ],
+  admin: [
+    { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { path: "/risk-predictor", label: "Risk Predictor", icon: Activity },
+    { path: "/donors", label: "Donor Network", icon: Droplets },
+    { path: "/emergency", label: "SOS Emergency", icon: AlertTriangle },
+    { path: "/profile", label: "Profile", icon: User },
+  ],
+  health_worker: [
+    { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { path: "/risk-predictor", label: "Risk Predictor", icon: Activity },
+    { path: "/donors", label: "Donor Network", icon: Droplets },
+    { path: "/emergency", label: "SOS Emergency", icon: AlertTriangle },
+    { path: "/profile", label: "Profile", icon: User },
+  ],
+};
+
+const roleLabels = {
+  doctor: "Doctor",
+  donor: "Donor",
+  admin: "Admin",
+  health_worker: "Health Worker",
+};
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const { role, userName } = useRole();
+  const navItems = navByRole[role];
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -80,7 +113,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="p-4 border-t border-sidebar-border">
+        <div className="p-4 border-t border-sidebar-border space-y-3">
+          <div className="px-3 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
+              {userName.split(" ").map(n => n[0]).join("").slice(0, 2)}
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-sidebar-foreground truncate">{userName}</p>
+              <p className="text-[10px] text-sidebar-muted">{roleLabels[role]}</p>
+            </div>
+          </div>
           <Link
             to="/"
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
