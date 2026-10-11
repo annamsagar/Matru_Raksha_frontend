@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Heart,
   Activity,
@@ -18,46 +18,76 @@ import {
 import { cn } from "@/lib/utils";
 import { useRole } from "@/contexts/RoleContext";
 
-const navByRole = {
-  doctor: [
-    { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { path: "/risk-predictor", label: "Risk Predictor", icon: Activity },
+const navByRole: Record<string, { path: string; label: string; icon: any }[]> = {
+  patient: [
+    { path: "/dashboard", label: "My Health", icon: LayoutDashboard },
+    { path: "/risk-predictor", label: "Risk Evaluation", icon: Activity },
+    { path: "/appointments", label: "Appointments", icon: ClipboardList },
     { path: "/emergency", label: "SOS Emergency", icon: AlertTriangle },
     { path: "/profile", label: "Profile", icon: User },
   ],
-  donor: [
-    { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { path: "/donors", label: "Donor Network", icon: Droplets },
-    { path: "/profile", label: "Profile", icon: User },
-  ],
-  admin: [
+  doctor: [
     { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { path: "/risk-predictor", label: "Risk Predictor", icon: Activity },
-    { path: "/donors", label: "Donor Network", icon: Droplets },
+    { path: "/appointments", label: "Appointments", icon: ClipboardList },
+    { path: "/referrals", label: "Patient Referrals", icon: Users },
     { path: "/emergency", label: "SOS Emergency", icon: AlertTriangle },
     { path: "/profile", label: "Profile", icon: User },
   ],
   health_worker: [
     { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { path: "/risk-predictor", label: "Risk Predictor", icon: Activity },
+    { path: "/referrals", label: "Doctor Referrals", icon: Users },
+    { path: "/donors", label: "Donor Network", icon: Droplets },
+    { path: "/emergency", label: "SOS Emergency", icon: AlertTriangle },
+    { path: "/profile", label: "Profile", icon: User },
+  ],
+  donor: [
+    { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { path: "/donors", label: "Donor Network", icon: Droplets },
+    { path: "/emergency", label: "SOS Emergency", icon: AlertTriangle },
+    { path: "/profile", label: "Profile", icon: User },
+  ],
+  admin: [
+    { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { path: "/admin/users", label: "User Accounts", icon: Users },
+    { path: "/admin/logs", label: "System Audit Logs", icon: BarChart3 },
+    { path: "/risk-predictor", label: "Risk Predictor", icon: Activity },
     { path: "/donors", label: "Donor Network", icon: Droplets },
     { path: "/emergency", label: "SOS Emergency", icon: AlertTriangle },
     { path: "/profile", label: "Profile", icon: User },
   ],
 };
 
-const roleLabels = {
+const roleLabels: Record<string, string> = {
+  patient: "Patient (Mother)",
   doctor: "Doctor",
-  donor: "Donor",
-  admin: "Admin",
-  health_worker: "Health Worker",
+  donor: "Blood Donor",
+  admin: "Administrator",
+  health_worker: "Health Worker (ASHA)",
 };
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { role, userName } = useRole();
-  const navItems = navByRole[role];
+  const navItems = navByRole[role] || navByRole.doctor;
+
+  // Bug #3 fix: properly clear all session data on sign-out
+  const handleSignOut = (e: React.MouseEvent) => {
+    e.preventDefault();
+    localStorage.removeItem("token");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("userId");
+    navigate("/");
+  };
+
+  // Bug #7 fix: derive initials from real userName
+  const avatarInitials = userName
+    ? userName.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
+    : "??";
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -82,9 +112,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
           <div>
             <h1 className="font-heading font-bold text-sidebar-foreground text-sm">
-              Maternal-Guard
+              Matru Raksha
             </h1>
-            <p className="text-[10px] text-sidebar-muted">& Life-Link</p>
+            <p className="text-[10px] text-sidebar-muted">Maternal Health Risk System</p>
           </div>
         </div>
 
@@ -123,13 +153,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <p className="text-[10px] text-sidebar-muted">{roleLabels[role]}</p>
             </div>
           </div>
-          <Link
-            to="/"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
+          <button
+            onClick={handleSignOut}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
           >
             <LogOut className="w-4 h-4" />
             Sign Out
-          </Link>
+          </button>
         </div>
       </aside>
 
@@ -145,11 +175,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </button>
           <div className="flex items-center gap-2 lg:hidden">
             <Heart className="w-5 h-5 text-emergency" />
-            <span className="font-heading font-bold text-sm">Maternal-Guard</span>
+            <span className="font-heading font-bold text-sm">Matru Raksha</span>
           </div>
           <div className="ml-auto flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
-              D
+              {avatarInitials}
             </div>
           </div>
         </header>

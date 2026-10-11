@@ -37,14 +37,14 @@
     --radius: 0.75rem;
 
     /* Custom medical tokens */
-    --emergency: 0 85% 50%;
+    --emergency: 0 100% 50%;
     --emergency-foreground: 0 0% 100%;
-    --emergency-glow: 0 85% 50%;
+    --emergency-glow: 0 100% 50%;
 
     --safe: 145 65% 38%;
     --safe-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
+    --warning: 45 92% 50%;
     --warning-foreground: 0 0% 100%;
 
     --info: 200 80% 50%;
@@ -65,9 +65,9 @@
 
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(215 70% 28%), hsl(200 80% 50%));
-    --gradient-emergency: linear-gradient(135deg, hsl(0 85% 50%), hsl(15 90% 55%));
+    --gradient-emergency: linear-gradient(135deg, hsl(0 100% 50%), hsl(0 90% 55%));
     --gradient-safe: linear-gradient(135deg, hsl(145 65% 38%), hsl(160 60% 45%));
-    --gradient-warning: linear-gradient(135deg, hsl(38 92% 50%), hsl(25 85% 55%));
+    --gradient-warning: linear-gradient(135deg, hsl(45 92% 50%), hsl(35 85% 55%));
     --gradient-surface: linear-gradient(180deg, hsl(210 20% 98%), hsl(210 25% 95%));
 
     /* Shadows */
@@ -110,13 +110,13 @@
     --input: 215 20% 20%;
     --ring: 200 80% 55%;
 
-    --emergency: 0 80% 55%;
+    --emergency: 0 100% 50%;
     --emergency-foreground: 0 0% 100%;
 
     --safe: 145 60% 42%;
     --safe-foreground: 0 0% 100%;
 
-    --warning: 38 85% 55%;
+    --warning: 45 85% 55%;
     --warning-foreground: 0 0% 100%;
 
     --info: 200 75% 55%;

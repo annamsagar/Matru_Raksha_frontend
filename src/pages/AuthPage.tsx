@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Shield, Eye, EyeOff, Heart, Stethoscope, Droplets, UserCog } from "lucide-react";
+import { Shield, Eye, EyeOff, Heart, Stethoscope, Droplets, UserCog, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useRole, UserRole } from "@/contexts/RoleContext";
@@ -12,6 +12,7 @@ import { useRole, UserRole } from "@/contexts/RoleContext";
 type AuthMode = "login" | "register";
 
 const roles = [
+  { id: "patient", label: "Patient", icon: User },
   { id: "doctor", label: "Doctor", icon: Stethoscope },
   { id: "donor", label: "Donor", icon: Droplets },
   { id: "admin", label: "Admin", icon: UserCog },
@@ -34,7 +35,7 @@ interface RegisterForm {
 export default function AuthPage() {
   const [mode, setMode] = useState<AuthMode>("login");
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedRole, setSelectedRole] = useState("doctor");
+  const [selectedRole, setSelectedRole] = useState("patient");
   const navigate = useNavigate();
   const { toast } = useToast();
   const { setRole, setUserName } = useRole();
@@ -42,17 +43,60 @@ export default function AuthPage() {
   const loginForm = useForm<LoginForm>();
   const registerForm = useForm<RegisterForm>();
 
-  const handleLogin = (data: LoginForm) => {
-    setRole(selectedRole as UserRole);
-    toast({ title: "Welcome back!", description: `Signed in as ${selectedRole}` });
-    setTimeout(() => navigate("/dashboard"), 500);
+  const handleLogin = async (data: LoginForm) => {
+    try {
+      const response = await fetch("http://localhost:8081/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: data.email, password: data.password })
+      });
+
+      if (!response.ok) throw new Error("Invalid credentials");
+      
+      const resData = await response.json();
+      localStorage.setItem("token", resData.token);
+      localStorage.setItem("userId", String(resData.user.id));   // Bug #1 fix
+      localStorage.setItem("userRole", resData.user.role);
+      localStorage.setItem("userName", resData.user.name);       // Bug #2 fix
+      
+      // Bug #5 fix: role from backend is already lowercase without ROLE_ prefix
+      const roleStr = resData.user.role.replace("ROLE_", "").toLowerCase() as UserRole;
+      setRole(roleStr);
+      setUserName(resData.user.name);
+      toast({ title: "Welcome back!", description: `Signed in successfully` });
+      setTimeout(() => navigate("/dashboard"), 500);
+    } catch (error) {
+      toast({ title: "Login Failed", description: "Invalid email or password", variant: "destructive" });
+    }
   };
 
-  const handleRegister = (data: RegisterForm) => {
-    setRole(selectedRole as UserRole);
-    if (data.name) setUserName(data.name);
-    toast({ title: "Account created!", description: "Welcome to Maternal-Guard" });
-    setTimeout(() => navigate("/dashboard"), 500);
+  const handleRegister = async (data: RegisterForm) => {
+    try {
+      const response = await fetch("http://localhost:8081/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          password: data.password,
+          phone: data.phone,
+          role: selectedRole
+        })
+      });
+
+      if (!response.ok) throw new Error("Registration failed");
+      
+      const resData = await response.json();
+      localStorage.setItem("userId", String(resData.user.id));
+      localStorage.setItem("userName", resData.user.name);
+      setRole(selectedRole as UserRole);
+      if (data.name) setUserName(data.name);
+      
+      toast({ title: "Account created!", description: "Welcome to Maternal-Guard. Please sign in." });
+      setMode("login");
+    } catch (error) {
+      toast({ title: "Registration Failed", description: "Email might already be in use", variant: "destructive" });
+    }
   };
 
   return (
@@ -74,20 +118,18 @@ export default function AuthPage() {
           <p className="text-primary-foreground/80 text-lg">
             AI-Driven Maternal Care & Emergency Donor Network
           </p>
-          <div className="flex items-center justify-center gap-6 pt-4">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-primary-foreground">500+</p>
-              <p className="text-xs text-primary-foreground/60">Lives Saved</p>
+          <div className="grid grid-cols-3 gap-3 pt-4 text-center">
+            <div className="p-3 rounded-xl bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/10">
+              <p className="text-xs font-bold text-primary-foreground">AI Risk Engine</p>
+              <p className="text-[10px] text-primary-foreground/70 mt-0.5">Clinical ML</p>
             </div>
-            <div className="w-px h-10 bg-primary-foreground/20" />
-            <div className="text-center">
-              <p className="text-2xl font-bold text-primary-foreground">2K+</p>
-              <p className="text-xs text-primary-foreground/60">Active Donors</p>
+            <div className="p-3 rounded-xl bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/10">
+              <p className="text-xs font-bold text-primary-foreground">SOS Network</p>
+              <p className="text-[10px] text-primary-foreground/70 mt-0.5">Blood Donors</p>
             </div>
-            <div className="w-px h-10 bg-primary-foreground/20" />
-            <div className="text-center">
-              <p className="text-2xl font-bold text-primary-foreground">98%</p>
-              <p className="text-xs text-primary-foreground/60">Accuracy</p>
+            <div className="p-3 rounded-xl bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/10">
+              <p className="text-xs font-bold text-primary-foreground">Maternal Care</p>
+              <p className="text-[10px] text-primary-foreground/70 mt-0.5">Field Sync</p>
             </div>
           </div>
         </div>
@@ -147,7 +189,7 @@ export default function AuthPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="doctor@hospital.com"
+                  placeholder="your.email@hospital.com"
                   {...loginForm.register("email", { required: true })}
                 />
               </div>
